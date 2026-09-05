@@ -50,6 +50,7 @@ make smoke-test
 
 - Port-specific notes: See `PORTING-NOTES.md`
 - General porting guide: https://github.com/NeoOSOrganization/neoos-docs/blob/main/docs/porting.md
+ - **[3D ASCII Viewer](https://github.com/NeoOSOrganization/neoos-3d-ascii-viewer)** — Another NeoOS port example
 
 ## License
 
@@ -63,3 +64,4 @@ This is a **port template**. Each port is its own repository.
 - **[neoos-musl](https://github.com/NeoOSOrganization/neoos-musl)** — libc (ports link against this)
 - **[neoos-os-builder](https://github.com/NeoOSOrganization/neoos-os-builder)** — Assembles final images with selected ports
 - **[neoos-docs](https://github.com/NeoOSOrganization/neoos-docs)** — Porting guide and best practices
+ - **[3D ASCII Viewer](https://github.com/NeoOSOrganization/neoos-3d-ascii-viewer)** — Another NeoOS port example
