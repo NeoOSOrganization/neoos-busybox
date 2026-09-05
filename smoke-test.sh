@@ -1,29 +1,25 @@
 #!/bin/bash
-# BusyBox smoke test for NeoOS
-# Runs after /busybox.nex is installed in the OS image
-
+# Host-side smoke test: verifies the build artifact's shape. Full
+# interactive validation (shell startup, applet behavior) happens
+# inside a NeoOS boot via neoos-kernel's regression harness -- this
+# repo has no NeoOS to boot on its own.
 set -e
 
-echo "=== BusyBox Smoke Test ==="
+BIN="${1:-build/busybox.nex}"
 
-# Test: shell can start
-/busybox sh -c "echo hello" > /tmp/test.txt 2>&1 || {
-    echo "FAILED: shell startup"
-    exit 1
-}
+[ -f "$BIN" ] || { echo "FAILED: $BIN missing"; exit 1; }
 
-# Test: output is correct
-[ "$(cat /tmp/test.txt)" = "hello" ] || {
-    echo "FAILED: echo command"
-    cat /tmp/test.txt
-    exit 1
-}
-
-# Test: basic utilities exist
-/busybox ls / > /dev/null || {
-    echo "FAILED: ls command"
-    exit 1
-}
-
-echo "PASSED: BusyBox basic functionality"
-exit 0
+# A plain ELF64 executable -- nexify's NOX magic stamp is a FAT-disk
+# convenience (keeps host tools from misreading a mounted executable)
+# that embedfs has no need for: kernel/elf.c accepts both magics, and
+# an embedfs-embedded blob is never browsed by host tools anyway.
+python3 - "$BIN" <<'EOF'
+import sys
+with open(sys.argv[1], "rb") as f:
+    data = f.read(20)
+assert data[1:4] == b"ELF", f"not an ELF file: {data[1:4]!r}"
+assert data[4] == 2, "not ELF64"
+e_type = int.from_bytes(data[16:18], "little")
+assert e_type == 2, f"not an executable (e_type={e_type})"
+print("smoke-test: OK -- ELF64 executable")
+EOF

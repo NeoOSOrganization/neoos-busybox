@@ -4,16 +4,33 @@ BusyBox port: interactive shell (ash), file utilities, and core utilities for Ne
 
 ## Quick Start
 
-Build (requires musl and kernel):
+Build (requires musl):
 
 ```bash
 git clone https://github.com/NeoOSOrganization/neoos-musl ../neoos-musl
-cd ../neoos-musl && make
+cd ../neoos-musl && make KERNEL_SHIM_DIR=../neoos-kernel/third_party/shim
 
 git clone https://github.com/NeoOSOrganization/neoos-busybox
 cd neoos-busybox
+git submodule update --init upstream
 make MUSL_DIR=../neoos-musl/build-output
-# Produces: build/busybox.nex
+# Produces: build/busybox.nex + build/busybox.test.json
+```
+
+`config/apply.sh` configures the upstream submodule (allnoconfig + the
+`config/neoos.fragment` overlay); the submodule itself stays a pristine
+checkout, matching neoos-kernel's `third_party/shim` pattern.
+
+## Using it with neoos-kernel
+
+`build/busybox.test.json` is a manifest declaring exactly where
+busybox's inittab entries (bbspike/nshtest/bbsh) go and which markers
+they require — pass this repo's `build/` as one of neoos-kernel's
+`EMBED_DIRS`:
+
+```sh
+cd ../neoos-kernel
+make EMBED_DIRS=../neoos-busybox/build test
 ```
 
 ## Features
@@ -22,16 +39,6 @@ make MUSL_DIR=../neoos-musl/build-output
 - 200+ coreutils replacements
 - File utilities (cp, mv, rm, etc.)
 - Static linked with musl libc
-
-## Usage
-
-In NeoOS `/ETC/INITTAB`:
-
-```
-::once:/BUSYBOX ash
-```
-
-Then boot NeoOS and you have a shell.
 
 ## Build Details
 
@@ -43,7 +50,10 @@ Then boot NeoOS and you have a shell.
 
 ```bash
 make smoke-test
-# Runs basic shell tests in NeoOS environment
+# Host-side: verifies build/busybox.nex is a valid ELF64 executable.
+# Full interactive validation (shell startup, applet behavior) happens
+# inside a NeoOS boot via neoos-kernel's regression harness -- this
+# repo has no NeoOS to boot on its own.
 ```
 
 ## Documentation
